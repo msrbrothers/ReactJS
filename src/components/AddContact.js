@@ -1,4 +1,5 @@
 import React from "react";
+import { Link} from 'react-router-dom';
 
 
 class AddContact extends React.Component {
@@ -16,7 +17,7 @@ class AddContact extends React.Component {
             return;
         }
 
-        console.log(this.state);
+        console.log(this.props);
 
         this.props.addContactHandler(this.state);
         this.setState({ name: "", email: "" });
@@ -24,8 +25,18 @@ class AddContact extends React.Component {
 
     render() {
         return (
-            <div className="ui main mt-5" style={{ marginTop: "75px" }}>
-                <h3>Add Contact</h3>
+            <div className="ui container" style={{ marginTop: "50px" }}>
+                <div className="ui grid">
+                    <div className="eight wide column">
+                        <h3>Contacts List</h3>
+                    </div>
+                    <div className="eight wide column">
+                        <Link to="/list">
+                            <button className="ui button blue right floated">Go To List</button>
+                        </Link>
+
+                    </div>
+                </div>
                 <form className="ui form" onSubmit={this.add}>
                     <div className="field">
                         <label>Name</label>

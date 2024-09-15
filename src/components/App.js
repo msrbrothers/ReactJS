@@ -1,12 +1,9 @@
 //import './App.css';
-import BlogCard from '../blogCard/blogCard'
 import { Component, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import Home from './Home';
-import Product from './Product';
 import Header from './Header'
 import React from 'react';
-import ContactCard from './ContactCard';
+import ContactInfo from './ContactInfo'
 import ContactList from './ContactList';
 import AddContact from './AddContact';
 import { v4 as uuidv4 } from 'uuid';
@@ -35,16 +32,56 @@ function App() {
   }, [contacts])
 
   return (
-    <div>
-      <Header />
-      <AddContact addContactHandler={addContactHandler} />
-      <ContactList contacts={contacts} getContactId={removeContactHandler}/>
+    <div >
+      <Router>
+        <Header />
+        <Routes>
+        <Route
+          path="/list"
+          element={
+            <ContactList
+              contacts={contacts}
+              getContactId={removeContactHandler}
+            />
+          }
+        />
+        <Route
+          path="/add"
+          element={<AddContact addContactHandler={addContactHandler} />}
+        />
+        <Route
+          path="/contact/:id"
+          element={<ContactInfo />}
+        />
+         <Route
+          path="*"
+          element={
+            <ContactList
+              contacts={contacts}
+              getContactId={removeContactHandler}
+            />
+          }
+        />
+        </Routes>
+      </Router>
+
+      {/* <AddContact addContactHandler={addContactHandler} />
+      <ContactList contacts={contacts} getContactId={removeContactHandler} /> */}
     </div>
   )
 }
 
 export default App;
 
+//       <Router>
+//         <div>
+//           <Header />
+//           <Routes>
+//             <Route path="/" element={<Home />} />
+//             <Route path="/product" element={<Product />} />
+//           </Routes>
+//         </div>
+//       </Router>
 
 
 
