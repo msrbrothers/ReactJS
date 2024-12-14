@@ -1,170 +1,176 @@
 //import './App.css';
-import { Component, useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './Header'
 import React from 'react';
 import ContactInfo from './ContactInfo'
 import ContactList from './ContactList';
 import AddContact from './AddContact';
+import api from '../api/contacts';
 import { v4 as uuidv4 } from 'uuid';
-
+import EditDetailsWrapper from './EditDetails';
 function App() {
-  const LOCAL_STORAGE_KEY = "contacts"
-  const [contacts, setContacts] = useState(
-    JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) ?? []
-  );
+  const [contacts, setContacts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
 
-  const removeContactHandler = (id) => {
-    const newContactList = contacts.filter((contact) => {
-      return contact.id !== id;
-    });
-
-    setContacts(newContactList);
+  const retriveContacts = async () => {
+    const contacts = await api.get("/contacts");
+    return contacts.data;
+  }
+  const removeContactHandler = async (id) => {
+    const newContactList = await api.delete(`/contacts/${id}`);
+    if (newContactList) {
+      // Note: also we can delete without call api we can add new return contact
+      const allContact = await retriveContacts();
+      if (allContact) {
+        setContacts(allContact)
+      }
+    }
+    // const newContactList = contacts.filter((contact) => {
+    //   return contact.id !== id;
+    // });
+    //setContacts(newContactList);
   };
 
-  const addContactHandler = (contact) => {
-    setContacts([...contacts, { id: uuidv4(), ...contact }])
+  const addContactHandler = async (contact) => {
+    const body = {
+      id: uuidv4(),
+      ...contact
+    }
+
+    const responceData = await api.post('/contacts', body);
+    console.log("responceData ::", responceData.data);
+
+    setContacts([...contacts, responceData.data])
+
+
+    // setContacts([...contacts, { id: uuidv4(), ...contact }])
   }
 
+  const editContactHandler = async (contact) => {
+    try {
+      const updatedContact = await api.put(`/contacts/${contact.id}`, contact);
+
+      // Note: also we can update without call api we can add new return contact
+      const allContact = await retriveContacts();
+      if (allContact) {
+        setContacts(allContact)
+        return {
+          error: false,
+          data: updatedContact
+        }
+      }
+
+
+    } catch (error) {
+      return {
+        error: true,
+        msg: error.message
+      }
+
+    }
+
+
+
+  }
+  const searchHandler = (searchTerm) => {
+    console.log("outer searchTerm", searchTerm);
+   // searchTerm = "anika"
+    setSearchTerm(searchTerm);
+    if (searchTerm !== "") {
+      console.log("searchTerm ::", searchTerm);
+      
+      const newContactList = contacts.filter((contact) => {
+        return Object.values(contact)
+          .join(" ")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+      });
+      setSearchResults(newContactList);
+      console.log(searchResults);
+      
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  // const searchHandler = (keyword) => {
+  //   setSearchTerms(keyword)
+  //   console.log("keyword ::", keyword);
+    
+  //   if (searchTerms !== "") {
+  //     console.log("keyword", searchTerms);
+      
+  //     const newContactList = contacts.filter((contact) => {
+  //       return Object.values(contact).join(" ").toLocaleLowerCase().includes(keyword)
+  //     })
+      
+  //     if(newContactList){
+  //       setSearchResult(newContactList)
+  //     }
+     
+  //   }else{
+  //     setSearchResult([])
+  //   }    
+
+  // }
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(contacts))
-  }, [contacts])
+    const getAllContacts = async () => {
+      const allContact = await retriveContacts();
+      if (allContact) {
+        setContacts(allContact)
+      }
+    }
+
+    getAllContacts();
+    // localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(contacts))
+  }, [])
 
   return (
     <div >
       <Router>
         <Header />
         <Routes>
-        <Route
-          path="/list"
-          element={
-            <ContactList
-              contacts={contacts}
-              getContactId={removeContactHandler}
-            />
-          }
-        />
-        <Route
-          path="/add"
-          element={<AddContact addContactHandler={addContactHandler} />}
-        />
-        <Route
-          path="/contact/:id"
-          element={<ContactInfo />}
-        />
-         <Route
-          path="*"
-          element={
-            <ContactList
-              contacts={contacts}
-              getContactId={removeContactHandler}
-            />
-          }
-        />
+          <Route
+            path="/list"
+            element={
+              <ContactList
+                contacts={searchTerm.length < 3 ? contacts : searchResults}
+                getContactId={removeContactHandler}
+                term={searchTerm}
+                searchKeyWord={searchHandler}
+              />
+            }
+          />
+          <Route
+            path="/add"
+            element={<AddContact addContactHandler={addContactHandler} />}
+          />
+          <Route
+            path="/contact/:id"
+            element={<ContactInfo />}
+          />
+          <Route
+            path="/edit"
+            element={<EditDetailsWrapper editContactHandler={editContactHandler} />}
+          />
+          <Route
+            path="*"
+            element={
+              <ContactList
+                contacts={contacts}
+                getContactId={removeContactHandler}
+                term={searchTerm}
+                searchKeyWord={searchHandler}
+              />
+            }
+          />
         </Routes>
       </Router>
-
-      {/* <AddContact addContactHandler={addContactHandler} />
-      <ContactList contacts={contacts} getContactId={removeContactHandler} /> */}
     </div>
   )
 }
 
 export default App;
-
-//       <Router>
-//         <div>
-//           <Header />
-//           <Routes>
-//             <Route path="/" element={<Home />} />
-//             <Route path="/product" element={<Product />} />
-//           </Routes>
-//         </div>
-//       </Router>
-
-
-
-// class App extends Component {
-//   state = {
-//     isShow: true,
-//     person: [
-//       {
-//         fname: "Anika",
-//         lname: "Lodhi",
-//         age: 1,
-//         job: "Eng",
-//         likeCount: 0
-//       },
-//       {
-//         fname: "Sapna",
-//         lname: "Lodhi",
-//         age: 26,
-//         job: "Eng",
-//         likeCount: 0
-//       },
-//       {
-//         fname: "Ravindra",
-//         lname: "Lodhi",
-//         age: 281,
-//         job: "Eng",
-//         likeCount: 0
-//       },
-//     ]
-
-//   }
-
-//   onLikeBtnClick = (pos) => {
-//     const updatedBlogList = this.state.person;
-//     const updatedBlogObj = updatedBlogList[pos];
-//     updatedBlogObj.likeCount = updatedBlogObj.likeCount + 1;
-//     updatedBlogObj[pos] = updatedBlogObj;
-//     this.setState({ person: updatedBlogList })
-//   }
-
-
-
-
-
-
-//   buttonClicked = () => {
-//     console.log(" <p>{this.isShow}</p> ", this.isShow);
-//     //  let updateStatusValue = !this.state.isShow;
-//     //this.isShow = !this.isShow;
-//     //  this.setState({isShow : updateStatusValue})
-//     this.setState((preState, PreProps) => {
-//       return { isShow: !preState.isShow }
-//     })
-//   }
-
-
-
-//   render() {
-
-//     const personCard = this.state.person.map((ele, pos) => {
-//       return (
-//         <BlogCard key={pos} fname={ele.fname} lname={ele.lname} job={ele.job} age={ele.age} likeCount={ele.likeCount} onLikeBtnClick={() => { this.onLikeBtnClick(pos) }} />
-//       )
-//     })
-//     return (
-
-//       <Router>
-//         <div>
-//           <Header />
-//           <Routes>
-//             <Route path="/" element={<Home />} />
-//             <Route path="/product" element={<Product />} />
-//           </Routes>
-//         </div>
-//       </Router>
-
-
-//       // <div className="App">
-
-//       //   <button onClick={this.buttonClicked}>{this.state.isShow ? 'Hide List' : 'Show list'}</button>
-//       //   <p>{this.isShow}</p>
-//       //   {this.state.isShow ? personCard : null}
-//       // </div>
-//     )
-//   }
-// }

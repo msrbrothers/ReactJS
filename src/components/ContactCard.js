@@ -4,15 +4,13 @@ import { Link } from "react-router-dom";
 
 const ContactCard = (props) => {
     const { id, name, email } = props.contact;
-    console.log("id::", id);
-
     return (
         <div className="item" key={id}>
             <img className="ui avatar image" src={user} alt="user" />
             <div className="content">
                 <Link
                     to={`/contact/${id}`}
-                    state={{ contact: props.contact}}
+                    state={{ contact: props.contact }}
                 >
                     <div className="header">{name}</div>
                     <div>{email}</div>
@@ -21,6 +19,14 @@ const ContactCard = (props) => {
             <i className="trash alternate outline icon  right floated" style={{ color: "red", marginTop: "7px" }}
                 onClick={() => props.clickHandler(id)}
             ></i>
+            <Link 
+               to={`/edit`}
+               state={{ contact: props.contact }}>
+                <i
+                    className="edit alternate outline icon  right floated "
+                    style={{ color: "blue", marginTop: "7px"  ,paddingRight: "20px"}}
+                ></i>
+            </Link>
         </div>
     )
 }
